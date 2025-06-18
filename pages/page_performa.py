@@ -1,34 +1,60 @@
-def model_page(df):
-    st.title("🤖 Model Prediksi Kelulusan")
-    df_processed = preprocess_data(df.copy())
+import streamlit as st
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 
-    st.subheader("Pilih Rasio Data Latih")
-    train_size = st.slider("Persentase Data untuk Training", 10, 90, 80, step=5)
+st.title("🤖 Pelatihan Model Prediksi Kelulusan")
 
-    test_size = 1 - (train_size / 100)
+@st.cache_data
+def load_data():
+    return pd.read_csv("data/dataset_kelulusan_mahasiswa.csv")
 
-    # Split data berdasarkan slider
-    X = df_processed.drop('Status Kelulusan', axis=1)
-    y = df_processed['Status Kelulusan']
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=test_size, random_state=42
-    )
+df = load_data()
 
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
-    model.fit(X_train, y_train)
-    y_pred = model.predict(X_test)
+# Label encoding
+le_kerja = LabelEncoder()
+le_hadir = LabelEncoder()
+df["Pekerjaan Sambil Kuliah"] = le_kerja.fit_transform(df["Pekerjaan Sambil Kuliah"])
+df["Kategori Kehadiran"] = le_hadir.fit_transform(df["Kategori Kehadiran"])
 
-    accuracy = accuracy_score(y_test, y_pred)
-    cm = confusion_matrix(y_test, y_pred)
-    cr = classification_report(y_test, y_pred)
+# Split fitur dan target
+X = df.drop("Status Kelulusan", axis=1)
+y = df["Status Kelulusan"]
 
-    st.subheader("Akurasi Model")
-    st.write(f"{accuracy:.2f}")
+# Slider untuk proporsi data training
+train_size = st.slider("Pilih persentase data untuk pelatihan", 0.1, 0.9, 0.8, step=0.1)
 
-    st.subheader("Confusion Matrix")
-    fig, ax = plt.subplots()
-    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", ax=ax)
-    st.pyplot(fig)
+# Stratified split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, train_size=train_size, random_state=42, stratify=y
+)
 
-    st.subheader("Classification Report")
-    st.text(cr)
+# Model training
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+
+# Evaluasi
+st.write(f"**Akurasi:** {accuracy_score(y_test, y_pred):.2f}")
+
+st.subheader("Confusion Matrix")
+fig, ax = plt.subplots()
+sns.heatmap(confusion_matrix(y_test, y_pred), annot=True, fmt="d", cmap="Blues", ax=ax)
+st.pyplot(fig)
+
+st.subheader("Classification Report")
+st.text(classification_report(y_test, y_pred))
+
+st.subheader("Feature Importance")
+importance_df = pd.DataFrame({
+    "Fitur": X.columns,
+    "Penting": model.feature_importances_
+}).sort_values(by="Penting", ascending=False)
+
+fig, ax = plt.subplots()
+sns.barplot(data=importance_df, x="Penting", y="Fitur", ax=ax)
+st.pyplot(fig)
