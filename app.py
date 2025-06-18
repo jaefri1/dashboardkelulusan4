@@ -19,7 +19,7 @@ Kami dari **Kelompok 13** mempersembahkan sebuah dashboard interaktif yang memba
 
 Dashboard ini dirancang untuk memberikan wawasan mengenai karakteristik mahasiswa, mengevaluasi performa model prediksi, serta memperkirakan kelulusan berdasarkan data historis.
 
-🔍 ### Gunakan menu di sebelah kiri untuk menjelajahi fitur-fitur berikut:
+### 🔍 Gunakan menu di sebelah kiri untuk menjelajahi fitur-fitur berikut:
 - 📊 **Eksplorasi Data**: Visualisasi dan penjelajahan data kelulusan
 - ⚙️ **Performa Model**: Menampilkan evaluasi dari model klasifikasi yang digunakan
 - 🧮 **Prediksi Kelulusan**: Formulir untuk memprediksi status kelulusan mahasiswa
